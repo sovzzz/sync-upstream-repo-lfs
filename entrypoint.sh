@@ -30,6 +30,7 @@ echo "UPSTREAM_REPO=$UPSTREAM_REPO"
 
 git clone "https://github.com/${GITHUB_REPOSITORY}.git" work
 cd work || { echo "Missing work dir" && exit 2 ; }
+git lfs pull
 
 git config user.name "${GITHUB_ACTOR}"
 git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
@@ -39,6 +40,7 @@ git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${G
 
 git remote add upstream "$UPSTREAM_REPO"
 git fetch ${FETCH_ARGS} upstream
+git lfs fetch upstream upstream/master
 git remote -v
 
 git checkout ${DOWNSTREAM_BRANCH}
@@ -52,6 +54,7 @@ case ${SPAWN_LOGS} in
   (false)   echo "Not spawning time logs"
 esac
 
+git lfs push origin
 git push origin
 
 MERGE_RESULT=$(git merge ${MERGE_ARGS} upstream/${UPSTREAM_BRANCH})
@@ -63,6 +66,7 @@ then
 elif [[ $MERGE_RESULT != *"Already up to date."* ]]
 then
   git commit -m "Merged upstream"
+  git lfs push ${PUSH_ARGS} origin ${DOWNSTREAM_BRANCH}
   git push ${PUSH_ARGS} origin ${DOWNSTREAM_BRANCH} || exit $?
 fi
 
